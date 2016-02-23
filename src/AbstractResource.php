@@ -97,7 +97,8 @@ abstract class AbstractResource implements Resource
     public function load($id)
     {
         $response = $this->client->get($this->router->path($id));
-        $this->fill($response['attributes'], $response['id']);
+        $this->fill($response[0]['attributes'], $response[0]['id']);
+        return $this;
     }
 
     public function loadAll()
