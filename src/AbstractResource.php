@@ -12,7 +12,7 @@ use Billingo\API\Connector\HTTP\Request;
 use Billingo\API\DataMapper\Contracts\Resource;
 use Billingo\API\DataMapper\Exceptions\NewDeleteException;
 
-abstract class AbstarctResource implements Resource
+abstract class AbstractResource implements Resource
 {
     /*
      * The API endpoint this resource connects to
