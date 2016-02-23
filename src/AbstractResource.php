@@ -11,6 +11,7 @@ namespace Billingo\API\DataMapper;
 use Billingo\API\Connector\HTTP\Request;
 use Billingo\API\DataMapper\Contracts\Resource;
 use Billingo\API\DataMapper\Exceptions\NewDeleteException;
+use Billingo\API\DataMapper\Exceptions\UnsavedException;
 
 abstract class AbstractResource implements Resource
 {
@@ -37,12 +38,12 @@ abstract class AbstractResource implements Resource
     /*
      * Billingo API Client
      */
-    private $client;
+    protected $client;
 
     /*
      * Route helper
      */
-    private $router;
+    protected $router;
 
     /**
      * AbstarctResource constructor.
@@ -77,7 +78,7 @@ abstract class AbstractResource implements Resource
     public function save()
     {
         // update the resource or ..
-        if($this->exists && $this->_id) $this->client->put($this->router->path($this->_id), $this->attributes);
+        if($this->saved()) $this->client->put($this->router->path($this->_id), $this->attributes);
         else {
             // create the resource
             $response = $this->client->post($this->router->path(), $this->attributes);
@@ -88,7 +89,7 @@ abstract class AbstractResource implements Resource
 
     public function delete()
     {
-        if(!$this->exists || !isset($this->_id)) throw new NewDeleteException; // do not delete unsaved resources
+        if(!$this->saved()) throw new UnsavedException; // do not delete unsaved resources
         $this->client->delete($this->router->path($this->_id));
     }
 
@@ -112,5 +113,12 @@ abstract class AbstractResource implements Resource
         return $resources;
     }
 
-
+    /**
+     * Return true if resource is already saved
+     * @return bool
+     */
+    public function saved()
+    {
+        return (isset($this->_id) && $this->exists);
+    }
 }
