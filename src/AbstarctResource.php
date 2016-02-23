@@ -10,16 +10,39 @@ namespace Billingo\API\DataMapper;
 
 use Billingo\API\Connector\HTTP\Request;
 use Billingo\API\DataMapper\Contracts\Resource;
+use Billingo\API\DataMapper\Exceptions\NewDeleteException;
 
 abstract class AbstarctResource implements Resource
 {
+    /*
+     * The API endpoint this resource connects to
+     */
     protected $endpoint;
 
-    private $data = [];
+    /*
+     * Resource ID
+     */
+    protected $_id;
 
+    /*
+     * Resource attributes
+     */
+    private $attributes = [];
+
+    /*
+     * Should be TRUE when the resource already exists
+     */
+    public $exists = false;
+
+    /*
+     * Billingo API Client
+     */
     private $client;
 
-    public $exists = false;
+    /*
+     * Route helper
+     */
+    private $router;
 
     /**
      * AbstarctResource constructor.
@@ -30,33 +53,63 @@ abstract class AbstarctResource implements Resource
     {
         $this->client = $client;
         $this->exists = $exists;
+        $this->router = new Route($this->endpoint);
     }
 
-
-    public function fill(array $attributes)
+    function __set($name, $value)
     {
-        $this->data = $attributes;
+        $this->attributes[$name] = $value;
+    }
+
+    function __get($name) {
+        return $this->attributes[$name];
+    }
+
+    public function fill(array $attributes, $id=null)
+    {
+        $this->attributes = $attributes;
+        if($id) {
+            $this->exists = true;
+            $this->_id = $id;
+        }
     }
 
     public function save()
     {
-        if($this->exists) $this->client->put($this->endpoint, $this->data);
-        else $this->client->post($this->endpoint, $this->data);
+        // update the resource or ..
+        if($this->exists && $this->_id) $this->client->put($this->router->path($this->_id), $this->attributes);
+        else {
+            // create the resource
+            $response = $this->client->post($this->router->path(), $this->attributes);
+            $this->_id = $response['id'];
+            $this->exists = true;
+        }
     }
 
     public function delete()
     {
-        // TODO: Implement delete() method.
+        if(!$this->exists || !isset($this->_id)) throw new NewDeleteException; // do not delete unsaved resources
+        $this->client->delete($this->router->path($this->_id));
     }
+
 
     public function load($id)
     {
-        // TODO: Implement load() method.
+        $response = $this->client->get($this->router->path($id));
+        $this->fill($response['attributes'], $response['id']);
     }
 
     public function loadAll()
     {
-        // TODO: Implement loadAll() method.
+        $response = $this->client->get($this->router->path());
+        $resources = [];
+        foreach ($response as $item) {
+            $res = new static($this->client);
+            $res->fill($item['attributes'], $item['id']);
+            $resources[] = $res;
+        }
+
+        return $resources;
     }
 
 
