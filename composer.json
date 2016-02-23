@@ -1,0 +1,20 @@
+{
+  "name": "voov/billingo-api-datamapper",
+  "description": "Billingo API DataMapper",
+  "minimum-stability": "dev",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Daniel Fekete",
+      "email": "daniel.fekete@voov.hu"
+    }
+  ],
+  "require": {
+    "voov/billingo-api-connector": "1.*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Billingo\\API\\DataMapper\\": "src"
+    }
+  }
+}
