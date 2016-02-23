@@ -32,4 +32,15 @@ class BillingoFactory
     {
         return new $model($this->client);
     }
+
+    /**
+     * Create new resource from the name
+     * @param $name
+     * @return Resource
+     */
+    public function makeFromName($name)
+    {
+        $class = __NAMESPACE__ . "\\Models\\" . ucfirst($name);
+        return $this->make($class);
+    }
 }
